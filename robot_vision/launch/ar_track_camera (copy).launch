@@ -1,0 +1,39 @@
+//1.launch文件的重点是：节点(node)元素的集合。
+//2.roslaunch 则是让所有的节点共享同一个终端。
+
+<!-- 根元素起始 -->
+<launch>
+
+	//pkg
+	//该节点属于哪个包，相当于rosrun命令后面的第一个参数
+	//type
+	//可执行文件的名字，rosrun命令的第二个参数
+	//name
+	//该节点的名字，相当于代码中ros::int的命名信息，有了它代码中的名称会被覆盖。
+
+    <!-- 节点起始 -->
+    <node pkg="tf" type="static_transform_publisher" name="world_to_cam" 
+          args="0 0 0.5 0 1.57 0 world usb_cam 10" /> <!-- 节点结束 -->
+        
+    <arg name="marker_size" default="5" />	//arg标签：声明一个参数的存在（每一个argument必须给它分配一个 value（赋值））
+    <arg name="max_new_marker_error" default="0.08" />	//命令行可以覆盖default的值，但是不能覆盖 value 。
+    <arg name="max_track_error" default="0.2" />
+    <arg name="cam_image_topic" default="/usb_cam/image_raw" />
+    <arg name="cam_info_topic" default="/usb_cam/camera_info" />
+    <arg name="output_frame" default="/usb_cam" />
+    
+	//node标签中的param标签设置为该节点的子元素.    
+    <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+        <param name="marker_size"           type="double" value="$(arg marker_size)" />
+        <param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
+        <param name="max_track_error"       type="double" value="$(arg max_track_error)" />
+        <param name="output_frame"          type="string" value="$(arg output_frame)" />
+
+        <remap from="camera_image"  to="$(arg cam_image_topic)" />	//在launch文件中重新命名
+        <remap from="camera_info"   to="$(arg cam_info_topic)" />
+    </node>
+
+    <!-- rviz view /-->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find robot_vision)/config/ar_track_camera.rviz"/>
+
+</launch>
